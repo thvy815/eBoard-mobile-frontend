@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { DrawerContentScrollView, DrawerItemList } from "@react-navigation/drawer";
+import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
