@@ -1,12 +1,12 @@
 import {
-    ClassFundDto,
-    FundIncomeDetailDto,
-    FundIncomeDto,
+  ClassFundDto,
+  FundIncomeDetailDto,
+  FundIncomeDto,
 } from "@/types/fund";
 
 import axios from "axios";
 
-const API_URL = "http://192.168.1.8:5102/api/funds";
+const API_URL = "http://20.3.7.11:5102/api/funds";
 
 export const fundService = {
   getClassFund(classId: string) {

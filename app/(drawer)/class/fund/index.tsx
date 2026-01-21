@@ -8,8 +8,8 @@ import { ScrollView, Text } from "react-native";
 export default function ClassFundScreen() {
   console.log("FUND SCREEN RENDERED");
 
-  const classId = "27f5cded-0c8a-4aa0-a099-718ac7434a3b";
-  const studentId = "11111111-1111-1111-1111-111111111111";
+  const classId = "fc23fd72-6527-47ed-97c5-5e320060f457";
+  const studentId = "50c8948a-c091-4a45-b308-23f694fc6218";
 
   const [fund, setFund] = useState<any>(null);
   const [incomes, setIncomes] = useState<any[]>([]);
