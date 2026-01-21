@@ -51,6 +51,28 @@ export default function DrawerLayout() {
           ),
         }}
       />
+      {/* ✅ ẨN ROUTE CON KHỎI DRAWER (không hiện setting/... nữa) */}
+      <Drawer.Screen
+        name="setting/profile"
+        options={{ drawerItemStyle: { display: "none" }, title: "Thông tin cá nhân" }}
+      />
+      <Drawer.Screen
+        name="setting/student"
+        options={{ drawerItemStyle: { display: "none" }, title: "Thông tin học sinh" }}
+      />
+      <Drawer.Screen
+        name="setting/security"
+        options={{ drawerItemStyle: { display: "none" }, title: "Bảo mật" }}
+      />
+      <Drawer.Screen
+        name="setting/notifications"
+        options={{ drawerItemStyle: { display: "none" }, title: "Thông báo" }}
+      />
+      <Drawer.Screen
+        name="setting/help"
+        options={{ drawerItemStyle: { display: "none" }, title: "Trợ giúp" }}
+      />
+    
     </Drawer>
   );
 }
