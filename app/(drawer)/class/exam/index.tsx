@@ -1,7 +1,7 @@
 import { examService } from "@/services/examService";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 
 const CLASS_ID = "04598b0c-3d9f-4519-8581-dadee7db189a";
 
@@ -10,6 +10,7 @@ export default function Exam() {
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [weekDates, setWeekDates] = useState<Date[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetchExams();
@@ -38,8 +39,30 @@ export default function Exam() {
 
   const today = new Date().toDateString();
 
+  const reloadExams = async () => {
+    try {
+      setRefreshing(true);
+      const res = await examService.getByClass(CLASS_ID);
+      setExams(res.data);
+    } catch (e) {
+      console.log("Lỗi reload lịch thi", e);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView 
+      style={styles.container}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={reloadExams}
+          colors={["#047857"]}      // Android
+          tintColor="#047857"       // iOS
+        />
+      }
+    >
       {/* ===== WEEK CALENDAR ===== */}
       <View style={styles.weekContainer}>
         <View style={styles.weekHeader}>
@@ -72,6 +95,7 @@ export default function Exam() {
           {weekDates.map((date) => {
             const isActive = date.toDateString() === selectedDate.toDateString();
             const isToday = date.toDateString() === today;
+            const isHasExam = hasExamOnDate(date, exams);
 
             return (
               <View key={date.toISOString()} style={styles.dayWrapper}>
@@ -82,6 +106,7 @@ export default function Exam() {
                 <View
                   style={[
                     styles.dayCircle,
+                    isHasExam && !isActive && styles.dayHasExam,
                     isActive && styles.dayActive,
                   ]}
                   onTouchEnd={() => setSelectedDate(date)}
@@ -178,6 +203,14 @@ const getWeekDates = (date: Date) => {
     const d = new Date(start);
     d.setDate(start.getDate() + i);
     return d;
+  });
+};
+
+const hasExamOnDate = (date: Date, exams: any[]) => {
+  return exams.some((exam) => {
+    return (
+      new Date(exam.startTime).toDateString() === date.toDateString()
+    );
   });
 };
 
@@ -348,6 +381,11 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
     backgroundColor: "#047857",
+    
     marginTop: 4,
+  },
+
+  dayHasExam: {
+    backgroundColor: "#FFEDD5", 
   },
 });
