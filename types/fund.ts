@@ -1,29 +1,38 @@
 // types/fund.ts
-
 export type ClassFundDto = {
-  id: string;
-  className: string;
-  academicYear: string;
-  currentBalance: number;
   totalContributions: number;
   totalExpenses: number;
+  currentBalance: number;
 };
 
-export type FundIncomeStudent = {
+export type FundIncomeByClassDto = {
   id: string;
   title: string;
   expectedAmount: number;
-  paidAmount: number;
-  endDate: string; // DateOnly -> string "YYYY-MM-DD"
-  description: string;
+  amountPerStudent: number;
+  collectedAmount: number;
+  startDate: string; // YYYY-MM-DD
+  endDate: string;   // YYYY-MM-DD
+  description?: string | null;
+  status: string;    // "Đang thu"
 };
 
 export type FundExpenseDto = {
-  classFundId: string;
+  id: string;
+  classFundId?: string;
   title: string;
   amount: number;
-  spenderName: string;
-  expenseDate: string; // DateOnly -> string "YYYY-MM-DD"
-  invoiceImgUrl: string;
-  notes: string;
+  expenseDate: string; // YYYY-MM-DD
+  spenderName?: string | null;
+  notes?: string | null;
+};
+
+export type FundIncomeHistoryDto = {
+  id: string;
+  contributedAmount: number;
+  contributedInfo?: string | null;
+  contributedAt: string; // YYYY-MM-DD
+  contributionStatus: string; // e.g. "PARTIAL"
+  deadline: string; // YYYY-MM-DD
+  notes?: string | null;
 };
