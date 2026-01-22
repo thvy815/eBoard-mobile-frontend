@@ -12,7 +12,6 @@ const PRIMARY = "#4f9a94";
 type SettingRoute =
   | "/(drawer)/setting/profile"
   | "/(drawer)/setting/student"
-  | "/(drawer)/setting/notifications"
   | "/(drawer)/setting/security"
   | "/(drawer)/setting/help";
 
@@ -34,11 +33,7 @@ const ACCOUNT_ITEMS: Item[] = [
     icon: "school-outline",
     route: "/(drawer)/setting/student",
   },
-  {
-    title: "Thông báo",
-    icon: "notifications-outline",
-    route: "/(drawer)/setting/notifications",
-  },
+  
   {
     title: "Bảo mật",
     icon: "lock-closed-outline",

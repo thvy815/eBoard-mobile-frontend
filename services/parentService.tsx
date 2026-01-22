@@ -1,5 +1,5 @@
 import api from "@/lib/api";
-import type { ParentChildItem, ParentInfo } from "@/types/parent";
+import type { ParentChildItem, ParentInfo, UpdateParentInfoRequest } from "@/types/parent";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const CLASS_ID_KEY = "currentClassId";
@@ -14,12 +14,25 @@ export const parentService = {
     return res.data;
   },
 
+  async updateParentInfo(parentId: string, payload: UpdateParentInfoRequest): Promise<void> {
+    await api.put(`/parents/info/${parentId}`, payload);
+  },
+
   // GET /api/parents/class/{parentId}/children?pageNumber=1&pageSize=20
   async getChildrenByParentId(parentId: string, pageNumber = 1, pageSize = 20) {
     const res = await api.get<ParentChildItem[]>(`/parents/class/${parentId}/children`, {
       params: { pageNumber, pageSize },
     });
     return res.data;
+  },
+
+  async changePassword(payload: {
+    id: string;
+    oldPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+  }): Promise<void> {
+    await api.post(`/parents/change-password`, payload);
   },
 
   // Fetch children -> lấy classId + studentId -> lưu AsyncStorage

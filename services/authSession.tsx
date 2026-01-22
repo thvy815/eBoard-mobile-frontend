@@ -34,7 +34,7 @@ function pickUserIdFromClaims(claims: any): string | null {
   const candidates = [
     "parentId",
     "id",
-    "userId",
+    "user_id",
     "sub",
     "nameid",
     "unique_name",
@@ -91,7 +91,7 @@ export const authSession = {
     if (!refreshToken) return null;
 
     try {
-      // ⚠️ SỬA endpoint này theo BE của mày
+      // SỬA endpoint này theo BE của mày
       // Ví dụ: POST /api/auth/refresh { refreshToken }
       const res = await api.post<LoginResponse>("/auth/refresh", { refreshToken });
 

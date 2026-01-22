@@ -32,3 +32,11 @@ export type ParentChildItem = {
     description: string;
   };
 };
+
+export type UpdateParentInfoRequest = {
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  address: string;
+  healthCondition: string; // swagger PUT đang có field này
+};

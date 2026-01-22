@@ -5,6 +5,7 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-nati
 
 import { authSession } from "@/services/authSession";
 import { parentService } from "@/services/parentService";
+import { teacherService } from "@/services/teacherService";
 import type { ParentChildItem } from "@/types/parent";
 
 const PRIMARY = "#4f9a94";
@@ -22,8 +23,8 @@ type ClassInfoUI = {
   studentId: string;
   className: string;
   teacherName: string;
-  teacherPhone?: string; // API chưa có
-  teacherEmail?: string; // API chưa có
+  teacherPhone?: string;
+  teacherEmail?: string;
   totalStudents: number;
   room: string;
 };
@@ -44,7 +45,7 @@ export default function ClassDashboard() {
         const parentId = await authSession.getParentId();
         if (!parentId) throw new Error("Missing parentId (chưa đăng nhập hoặc chưa lưu session)");
 
-        // Gọi API lấy danh sách con + class
+        // 1) Gọi API lấy danh sách con + class
         const list: ParentChildItem[] = await parentService.getChildrenByParentId(parentId, 1, 20);
         if (!list || list.length === 0) throw new Error("Phụ huynh chưa có học sinh");
 
@@ -54,6 +55,20 @@ export default function ClassDashboard() {
         // Lưu classId + studentId để dùng cho các màn sau
         await parentService.fetchAndStoreCurrentChildIds(parentId);
 
+        // 2) Gọi API lấy teacher theo classId để có email + phone
+        const classId = first.classInfo.id;
+
+        let teacherPhone: string | undefined = undefined;
+        let teacherEmail: string | undefined = undefined;
+
+        try {
+          const t = await teacherService.getTeacherByClassId(classId);
+          teacherPhone = t?.phoneNumber ?? undefined;
+          teacherEmail = t?.email ?? undefined;
+        } catch {
+          // teacher api fail thì vẫn show teacherName bình thường
+        }
+
         const ui: ClassInfoUI = {
           classId: first.classInfo.id,
           studentId: first.studentInfo.id,
@@ -61,9 +76,8 @@ export default function ClassDashboard() {
           teacherName: first.classInfo.teacherName,
           totalStudents: first.classInfo.currentStudentCount,
           room: first.classInfo.roomName,
-          // teacherPhone/Email API không trả => để trống
-          teacherPhone: undefined,
-          teacherEmail: undefined,
+          teacherPhone,
+          teacherEmail,
         };
 
         if (mounted) setClassInfo(ui);
@@ -173,9 +187,7 @@ export default function ClassDashboard() {
           <View style={styles.statBox}>
             <Ionicons name="people-outline" size={18} color={PRIMARY} />
             <Text style={styles.statLabel}>Tổng số học sinh</Text>
-            <Text style={styles.statValue}>
-              {classInfo ? `${classInfo.totalStudents} học sinh` : "—"}
-            </Text>
+            <Text style={styles.statValue}>{classInfo ? `${classInfo.totalStudents} học sinh` : "—"}</Text>
           </View>
 
           <View style={[styles.statBox, styles.statBoxAlt]}>
@@ -188,8 +200,7 @@ export default function ClassDashboard() {
         {/* Note */}
         <View style={styles.noteBox}>
           <Text style={styles.noteTitle}>
-            <Ionicons name="information-circle-outline" size={16} color={PRIMARY} />{" "}
-            Liên hệ với giáo viên:
+            <Ionicons name="information-circle-outline" size={16} color={PRIMARY} /> Liên hệ với giáo viên:
           </Text>
           <Text style={styles.noteText}>• Vui lòng liên hệ trong giờ hành chính (7:00 - 17:00)</Text>
           <Text style={styles.noteText}>• Trường hợp khẩn cấp có thể gọi điện bất cứ lúc nào</Text>

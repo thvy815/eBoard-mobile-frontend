@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { DrawerContentScrollView, DrawerItemList } from "@react-navigation/drawer";
 import React, { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { authSession } from "@/services/authSession";
@@ -11,7 +11,6 @@ import type { ParentInfo } from "@/types/parent";
 export function CustomDrawerContent(props: any) {
   const [parent, setParent] = useState<ParentInfo | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showPw, setShowPw] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -40,12 +39,6 @@ export function CustomDrawerContent(props: any) {
   }, []);
 
   const nameText = loading ? "Đang tải..." : parent?.fullName ?? "Phụ huynh";
-  const pwText =
-    parent?.generatedPassword
-      ? showPw
-        ? parent.generatedPassword
-        : "••••••••"
-      : "";
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
@@ -59,16 +52,6 @@ export function CustomDrawerContent(props: any) {
 
             <Text style={styles.role}>Phụ huynh</Text>
             <Text style={styles.name}>{nameText}</Text>
-
-            {/* nếu muốn hiện mật khẩu (ẩn/hiện) */}
-            {!!pwText && (
-              <View style={styles.pwRow}>
-                <Text style={styles.pwText}>{pwText}</Text>
-                <Pressable onPress={() => setShowPw((v) => !v)} style={styles.eyeBtn}>
-                  <Ionicons name={showPw ? "eye-off" : "eye"} size={18} color="#dff3f1" />
-                </Pressable>
-              </View>
-            )}
           </View>
         </View>
 
@@ -115,19 +98,6 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "600",
     marginTop: 2,
-  },
-  pwRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 6,
-    gap: 8,
-  },
-  pwText: {
-    color: "#dff3f1",
-    fontSize: 13,
-  },
-  eyeBtn: {
-    padding: 4,
   },
   menu: {
     paddingTop: 12,

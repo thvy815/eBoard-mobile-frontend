@@ -1,7 +1,19 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, router } from "expo-router";
 import React, { useMemo, useState } from "react";
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+
+import { authSession } from "@/services/authSession";
+import { parentService } from "@/services/parentService";
 
 const PRIMARY = "#4f9a94";
 
@@ -9,15 +21,47 @@ export default function SecurityScreen() {
   const [cur, setCur] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const canSubmit = useMemo(
-    () => next.length >= 6 && next === confirm && cur.length > 0,
-    [cur, next, confirm]
+    () => next.length >= 6 && next === confirm && cur.length > 0 && !submitting,
+    [cur, next, confirm, submitting]
   );
 
-  function onChangePassword() {
-    // TODO: call API change password
-    console.log("change password");
+  async function onChangePassword() {
+    try {
+      setSubmitting(true);
+
+      const parentId = await authSession.getParentId();
+      if (!parentId) {
+        Alert.alert("Lỗi", "Không tìm thấy ParentId trong session.");
+        return;
+      }
+
+      await parentService.changePassword({
+        id: parentId,
+        oldPassword: cur,
+        newPassword: next,
+        confirmPassword: confirm,
+      });
+
+      setCur("");
+      setNext("");
+      setConfirm("");
+
+      Alert.alert("Thành công", "Đổi mật khẩu thành công.");
+      router.replace("/(drawer)/setting");
+    } catch (e: any) {
+      // nếu backend trả message khác nhau thì lấy message luôn
+      const msg =
+        e?.response?.data?.message ||
+        e?.response?.data ||
+        e?.message ||
+        "Đổi mật khẩu thất bại.";
+      Alert.alert("Lỗi", typeof msg === "string" ? msg : "Đổi mật khẩu thất bại.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -73,7 +117,6 @@ export default function SecurityScreen() {
           />
 
           <View style={styles.noteBox}>
-            <Text style={styles.note}>• Mật khẩu phải có ít nhất 6 ký tự</Text>
             <Text style={styles.note}>• Nên sử dụng ký tự chữ + số + ký tự đặc biệt</Text>
             <Text style={styles.note}>• Không chia sẻ mật khẩu với người khác</Text>
           </View>
@@ -84,7 +127,7 @@ export default function SecurityScreen() {
             onPress={onChangePassword}
             activeOpacity={0.85}
           >
-            <Text style={styles.btnText}>Đổi mật khẩu</Text>
+            {submitting ? <ActivityIndicator /> : <Text style={styles.btnText}>Đổi mật khẩu</Text>}
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -122,6 +165,12 @@ const styles = StyleSheet.create({
     borderColor: "#FED7AA",
   },
   note: { color: "#9A3412", fontWeight: "700", fontSize: 12.5, lineHeight: 18 },
-  btn: { marginTop: 14, backgroundColor: PRIMARY, paddingVertical: 12, borderRadius: 24, alignItems: "center" },
+  btn: {
+    marginTop: 14,
+    backgroundColor: PRIMARY,
+    paddingVertical: 12,
+    borderRadius: 24,
+    alignItems: "center",
+  },
   btnText: { color: "#fff", fontWeight: "900", fontSize: 14.5 },
 });
