@@ -1,29 +1,22 @@
-// src/services/attendanceService.ts
+// src/services/examService.ts
 import api from "@/lib/api";
 
-export const attendanceService = {
-  // Lấy danh sách đơn xin phép của học sinh trong lớp
-  getAbsentRequestsByStudent: (
-    studentId: string,
-    classId: string
+export const examService = {
+  getByClass: (
+    classId: string,
+    params?: {
+      from?: string;
+      to?: string;
+      subjectId?: string;
+      examFormat?: string;
+    }
   ) =>
-    api.get(
-      `/attendance/absent-requests/student/${studentId}/class/${classId}`
-    ),
-
-  // Tạo đơn xin phép nghỉ học
-  createAbsentRequest: (payload: {
-    studentId: string;
-    classId: string;
-    fromDate: string;
-    toDate: string;
-    reason: string;
-  }) =>
-    api.post(`/attendance/absent-request`, {
-      StudentId: payload.studentId,
-      ClassId: payload.classId,
-      FromDate: payload.fromDate,
-      ToDate: payload.toDate,
-      Reason: payload.reason,
+    api.get(`/exams-schedule/classes/${classId}`, {
+      params: {
+        From: params?.from,
+        To: params?.to,
+        SubjectId: params?.subjectId,
+        ExamFormat: params?.examFormat,
+      },
     }),
 };

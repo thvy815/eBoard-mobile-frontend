@@ -4,6 +4,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 
+
+const CLASS_ID = "04598b0c-3d9f-4519-8581-dadee7db189a";
+
 export default function Exam() {
   const [exams, setExams] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
