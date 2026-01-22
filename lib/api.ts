@@ -4,11 +4,7 @@ import axios from "axios";
  * Axios instance dùng chung cho toàn bộ app
  */
 const api = axios.create({
-<<<<<<< Updated upstream
-  baseURL: "http://20.3.7.11:5102/api", // <--- Đổi thành IP của máy bạn
-=======
   baseURL: "https://eboardapi-hsabeadsb2a8anb3.southeastasia-01.azurewebsites.net/api", // <--- Đổi thành IP của máy bạn
->>>>>>> Stashed changes
   timeout: 15000,
   headers: {
     "Content-Type": "application/json",
