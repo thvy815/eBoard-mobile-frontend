@@ -32,7 +32,7 @@ function pickUserIdFromClaims(claims: any): string | null {
 
   // Common keys (ASP.NET / JWT)
   const candidates = [
-    "parentId",
+    "user_id",
     "id",
     "userId",
     "sub",
