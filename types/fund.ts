@@ -1,5 +1,9 @@
+<<<<<<< Updated upstream
 // ================= FUND SUMMARY =================
 export interface ClassFundDto {
+=======
+export interface ClassFund {
+>>>>>>> Stashed changes
   id: string;
   className: string;
   academicYear: string;
@@ -7,9 +11,14 @@ export interface ClassFundDto {
   totalContributions: number;
   totalExpenses: number;
 }
+<<<<<<< Updated upstream
 export type FundIncomeStatus = "Da thu" | "Dang thu";
 // ================= FUND INCOME =================
 export interface FundIncomeDto {
+=======
+
+export interface FundIncome {
+>>>>>>> Stashed changes
   id: string;
   title: string;
   expectedAmount: number;
@@ -17,6 +26,7 @@ export interface FundIncomeDto {
   startDate: string;
   endDate: string;
   description: string;
+<<<<<<< Updated upstream
   status: FundIncomeStatus;
 }
 
@@ -41,3 +51,7 @@ export interface FundExpenseDto {
 }
 
 
+=======
+  status: string;
+}
+>>>>>>> Stashed changes

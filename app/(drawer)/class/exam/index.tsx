@@ -1,6 +1,6 @@
 import { examService } from "@/services/examService";
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 const CLASS_ID = "04598b0c-3d9f-4519-8581-dadee7db189a";
