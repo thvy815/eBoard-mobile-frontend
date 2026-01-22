@@ -2,6 +2,7 @@ import logo from "@/assets/images/eboard-logo.jpg";
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
+  Alert,
   Image,
   Keyboard,
   KeyboardAvoidingView,
@@ -15,6 +16,10 @@ import {
   View,
 } from "react-native";
 
+import { authService } from "@/services/authService";
+import { authSession } from "@/services/authSession";
+import { parentService } from "@/services/parentService";
+
 const PRIMARY = "#518581";
 
 export default function ParentLoginScreen() {
@@ -23,16 +28,68 @@ export default function ParentLoginScreen() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [secure, setSecure] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const canSubmit = useMemo(() => {
     return phone.trim().length > 0 && password.trim().length > 0;
   }, [phone, password]);
 
-  function onLogin() {
-    // TODO: gọi API sau
-    // Thành công thì chuyển sang Home trong (drawer)
+  async function onLogin() {
+  if (!canSubmit || loading) return;
+
+  try {
+    setLoading(true);
+
+    const res = await authService.parentLogin({
+      phoneNumber: phone.trim(),
+      password: password,
+    });
+
+    console.log("Login success:", res);
+
+    // ✅ đảm bảo token luôn là string
+    const accessToken = res?.accessToken;
+    const refreshToken = res?.refreshToken;
+
+    if (!accessToken || !refreshToken) {
+      Alert.alert(
+        "Đăng nhập thất bại",
+        "BE không trả accessToken/refreshToken. Kiểm tra lại response login."
+      );
+      return;
+    }
+
+    const parentId = await authSession.saveLoginSession({
+      accessToken,
+      refreshToken,
+      // parentId: res?.parentId, // nếu BE có
+    });
+
+    if (!parentId) {
+      Alert.alert(
+        "Thiếu thông tin tài khoản",
+        "Không lấy được parentId từ token. Hãy kiểm tra JWT claims hoặc cập nhật BE để trả parentId."
+      );
+      return;
+    }
+
+    await parentService.fetchAndStoreCurrentChildIds(parentId);
+
     router.replace("../(drawer)/class");
+  } catch (error: any) {
+    console.log("Login error:", error);
+
+    Alert.alert(
+      "Đăng nhập thất bại",
+      error?.response?.data?.message ||
+        error?.message ||
+        "Vui lòng kiểm tra lại số điện thoại hoặc mật khẩu"
+    );
+  } finally {
+    setLoading(false);
   }
+}
+
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -80,24 +137,20 @@ export default function ParentLoginScreen() {
                 </Pressable>
               </View>
 
-              <Pressable
-                onPress={() => router.push("/(auth)/forgot-password")}
-                style={styles.forgotBtn}
-              >
+              <Pressable onPress={() => router.push("/(auth)/forgot-password")} style={styles.forgotBtn}>
                 <Text style={styles.forgotText}>Quên mật khẩu?</Text>
               </Pressable>
 
-
               <Pressable
                 onPress={onLogin}
-                disabled={!canSubmit}
+                disabled={!canSubmit || loading}
                 style={({ pressed }) => [
                   styles.loginBtn,
-                  !canSubmit && styles.loginBtnDisabled,
-                  pressed && canSubmit && styles.pressed,
+                  (!canSubmit || loading) && styles.loginBtnDisabled,
+                  pressed && canSubmit && !loading && styles.pressed,
                 ]}
               >
-                <Text style={styles.loginText}>Đăng nhập</Text>
+                <Text style={styles.loginText}>{loading ? "Đang đăng nhập..." : "Đăng nhập"}</Text>
               </Pressable>
 
               <Pressable onPress={() => router.back()} style={styles.backBtn}>
@@ -113,7 +166,12 @@ export default function ParentLoginScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#fff" },
-  container: { flex: 1, paddingHorizontal: 20, justifyContent: "center", alignItems: "center" },
+  container: {
+    flex: 1,
+    paddingHorizontal: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   card: { width: "100%", maxWidth: 420, alignItems: "center" },
   logo: { width: 220, height: 80, marginBottom: 18 },
 
@@ -121,7 +179,12 @@ const styles = StyleSheet.create({
   subtitle: { marginTop: 6, fontSize: 13, color: "#6B7280" },
 
   form: { width: "100%", marginTop: 22 },
-  label: { fontSize: 13, color: "#374151", marginBottom: 6, fontWeight: "600" },
+  label: {
+    fontSize: 13,
+    color: "#374151",
+    marginBottom: 6,
+    fontWeight: "600",
+  },
   input: {
     width: "100%",
     borderWidth: 1,
@@ -162,7 +225,7 @@ const styles = StyleSheet.create({
   backBtn: { marginTop: 14, alignSelf: "center" },
   backText: { color: "#6B7280", fontSize: 13, fontWeight: "600" },
 
-    forgotBtn: {
+  forgotBtn: {
     marginTop: 10,
     alignSelf: "flex-end",
   },
@@ -171,5 +234,4 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 13,
   },
-
 });

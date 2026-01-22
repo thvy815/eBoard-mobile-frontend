@@ -1,7 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+
+import { authSession } from "@/services/authSession";
+import { parentService } from "@/services/parentService";
+import type { ParentChildItem } from "@/types/parent";
 
 const PRIMARY = "#4f9a94";
 
@@ -13,17 +17,79 @@ const MENU = [
   { title: "Thời khóa biểu", icon: "time-outline", route: "/class/timetable" as const },
 ];
 
-// MOCK DATA (sau này nối API)
-const CLASS_INFO = {
-  className: "Lớp 3A",
-  teacherName: "Nguyễn Thị Vân",
-  teacherPhone: "0909123456",
-  teacherEmail: "nguyen@school.vn",
-  totalStudents: 30,
-  room: "Phòng 301 - Tầng 3",
+type ClassInfoUI = {
+  classId: string;
+  studentId: string;
+  className: string;
+  teacherName: string;
+  teacherPhone?: string; // API chưa có
+  teacherEmail?: string; // API chưa có
+  totalStudents: number;
+  room: string;
 };
 
 export default function ClassDashboard() {
+  const [loading, setLoading] = useState(true);
+  const [classInfo, setClassInfo] = useState<ClassInfoUI | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function load() {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const parentId = await authSession.getParentId();
+        if (!parentId) throw new Error("Missing parentId (chưa đăng nhập hoặc chưa lưu session)");
+
+        // Gọi API lấy danh sách con + class
+        const list: ParentChildItem[] = await parentService.getChildrenByParentId(parentId, 1, 20);
+        if (!list || list.length === 0) throw new Error("Phụ huynh chưa có học sinh");
+
+        // Mặc định lấy đứa con đầu tiên
+        const first = list[0];
+
+        // Lưu classId + studentId để dùng cho các màn sau
+        await parentService.fetchAndStoreCurrentChildIds(parentId);
+
+        const ui: ClassInfoUI = {
+          classId: first.classInfo.id,
+          studentId: first.studentInfo.id,
+          className: first.classInfo.name,
+          teacherName: first.classInfo.teacherName,
+          totalStudents: first.classInfo.currentStudentCount,
+          room: first.classInfo.roomName,
+          // teacherPhone/Email API không trả => để trống
+          teacherPhone: undefined,
+          teacherEmail: undefined,
+        };
+
+        if (mounted) setClassInfo(ui);
+      } catch (e: any) {
+        if (mounted) {
+          setError(e?.message ?? "Load class info failed");
+          setClassInfo(null);
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const teacherPhoneText = classInfo?.teacherPhone ?? "—";
+  const teacherEmailText = classInfo?.teacherEmail ?? "—";
+
+  const disableContact = useMemo(() => {
+    return !classInfo?.teacherPhone && !classInfo?.teacherEmail;
+  }, [classInfo?.teacherPhone, classInfo?.teacherEmail]);
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 18 }}>
       <Text style={styles.header}>Xin chào, Phụ huynh!</Text>
@@ -47,6 +113,10 @@ export default function ClassDashboard() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Thông tin lớp học</Text>
 
+        {/* trạng thái load/error */}
+        {loading && <Text style={{ color: "#6B7280", marginBottom: 8 }}>Đang tải thông tin lớp...</Text>}
+        {!!error && <Text style={{ color: "#DC2626", marginBottom: 8 }}>{error}</Text>}
+
         {/* Teacher card */}
         <View style={styles.teacherCard}>
           <View style={styles.teacherHeader}>
@@ -55,29 +125,43 @@ export default function ClassDashboard() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.teacherRole}>Giáo viên chủ nhiệm</Text>
-              <Text style={styles.teacherName}>{CLASS_INFO.teacherName}</Text>
-              <Text style={styles.className}>{CLASS_INFO.className}</Text>
+              <Text style={styles.teacherName}>{classInfo?.teacherName ?? "—"}</Text>
+              <Text style={styles.className}>{classInfo?.className ?? "—"}</Text>
             </View>
           </View>
 
           <View style={styles.teacherRow}>
             <View style={styles.teacherItem}>
               <Ionicons name="call-outline" size={16} color={PRIMARY} />
-              <Text style={styles.teacherValue}>{CLASS_INFO.teacherPhone}</Text>
+              <Text style={styles.teacherValue}>{teacherPhoneText}</Text>
             </View>
             <View style={styles.teacherItem}>
               <Ionicons name="mail-outline" size={16} color={PRIMARY} />
-              <Text style={styles.teacherValue}>{CLASS_INFO.teacherEmail}</Text>
+              <Text style={styles.teacherValue}>{teacherEmailText}</Text>
             </View>
           </View>
 
           <View style={styles.teacherActions}>
-            <TouchableOpacity style={styles.actionBtn} activeOpacity={0.85}>
+            <TouchableOpacity
+              style={[styles.actionBtn, disableContact && { opacity: 0.5 }]}
+              activeOpacity={0.85}
+              disabled={disableContact}
+              onPress={() => {
+                // TODO: Linking.openURL(`tel:${classInfo?.teacherPhone}`)
+              }}
+            >
               <Ionicons name="call-outline" size={16} color={PRIMARY} />
               <Text style={styles.actionText}>Gọi điện</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.actionBtn, styles.actionBtnAlt]} activeOpacity={0.85}>
+            <TouchableOpacity
+              style={[styles.actionBtn, styles.actionBtnAlt, disableContact && { opacity: 0.5 }]}
+              activeOpacity={0.85}
+              disabled={disableContact}
+              onPress={() => {
+                // TODO: Linking.openURL(`mailto:${classInfo?.teacherEmail}`)
+              }}
+            >
               <Ionicons name="mail-outline" size={16} color="#F59E0B" />
               <Text style={[styles.actionText, { color: "#F59E0B" }]}>Gửi email</Text>
             </TouchableOpacity>
@@ -89,13 +173,15 @@ export default function ClassDashboard() {
           <View style={styles.statBox}>
             <Ionicons name="people-outline" size={18} color={PRIMARY} />
             <Text style={styles.statLabel}>Tổng số học sinh</Text>
-            <Text style={styles.statValue}>{CLASS_INFO.totalStudents} học sinh</Text>
+            <Text style={styles.statValue}>
+              {classInfo ? `${classInfo.totalStudents} học sinh` : "—"}
+            </Text>
           </View>
 
           <View style={[styles.statBox, styles.statBoxAlt]}>
             <Ionicons name="location-outline" size={18} color="#F59E0B" />
             <Text style={styles.statLabel}>Phòng học</Text>
-            <Text style={styles.statValue}>{CLASS_INFO.room}</Text>
+            <Text style={styles.statValue}>{classInfo?.room ?? "—"}</Text>
           </View>
         </View>
 
