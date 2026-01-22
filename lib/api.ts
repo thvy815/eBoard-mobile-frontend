@@ -5,7 +5,7 @@ import axios from "axios";
  * Axios instance dùng chung cho toàn bộ app
  */
 const api = axios.create({
-  baseURL: "http://192.168.102.49:5102/api", // <--- Đổi thành IP của máy bạn
+  baseURL: "https://eboardapi-hsabeadsb2a8anb3.southeastasia-01.azurewebsites.net/api", // <--- Đổi thành IP của máy bạn
   timeout: 15000,
   headers: {
     "Content-Type": "application/json",

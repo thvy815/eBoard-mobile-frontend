@@ -7,7 +7,6 @@ const STUDENT_ID_KEY = "currentStudentId";
 
 export const parentService = {
 
-
   // GET /api/parents/info/{id}
   async getParentInfo(parentId: string) {
     const res = await api.get<ParentInfo>(`/parents/info/${parentId}`);
