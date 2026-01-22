@@ -1,9 +1,8 @@
 import { examService } from "@/services/examService";
+import { parentService } from "@/services/parentService";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
-
-const CLASS_ID = "04598b0c-3d9f-4519-8581-dadee7db189a";
 
 export default function Exam() {
   const [exams, setExams] = useState<any[]>([]);
@@ -11,20 +10,45 @@ export default function Exam() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [weekDates, setWeekDates] = useState<Date[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [classId, setClassId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchExams();
+    const loadClassId = async () => {
+      const storedClassId = await parentService.getStoredClassId();
+      setClassId(storedClassId);
+    };
+
+    loadClassId();
   }, []);
 
-  const fetchExams = async () => {
+  useEffect(() => {
+    if (!classId) return;
+    fetchExams(classId);
+  }, [classId]);
+
+  const fetchExams = async (cid: string) => {
     try {
       setLoading(true);
-      const res = await examService.getByClass(CLASS_ID);
+      const res = await examService.getByClass(cid);
       setExams(res.data);
     } catch (e) {
       console.log("Lỗi lấy lịch thi", e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const reloadExams = async () => {
+    if (!classId) return;
+
+    try {
+      setRefreshing(true);
+      const res = await examService.getByClass(classId);
+      setExams(res.data);
+    } catch (e) {
+      console.log("Lỗi reload lịch thi", e);
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -38,18 +62,6 @@ export default function Exam() {
   });
 
   const today = new Date().toDateString();
-
-  const reloadExams = async () => {
-    try {
-      setRefreshing(true);
-      const res = await examService.getByClass(CLASS_ID);
-      setExams(res.data);
-    } catch (e) {
-      console.log("Lỗi reload lịch thi", e);
-    } finally {
-      setRefreshing(false);
-    }
-  };
 
   return (
     <ScrollView 
